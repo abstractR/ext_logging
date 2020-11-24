@@ -32,31 +32,17 @@ logs fully RFC 5424 compatible what, in turn, allows to use syslog-ng or logstas
 #### Example:
 
 ```python
-log.info('here test', repr=some_struct, jsonData=some_jsonable_struct, trace=1, stack=1, oes=1)
+log.info('here test', repr=some_struct, jsonData=some_jsonable_struct, trace=1, stack=1, shorten=1000)
 ```
 
 1. **repr** stands for putting pretty formatted multiline repr() of some_struct
 2. **json_data** stands for dumping some_jsonable_struct into pretty formatted string inside log
 3. **trace=1** makes sense when log is used inside except block, it automatically adds pretty formatted trace to the log data element and exception to the msg part.
 4. **stack=1** adds callstack
-5. **oes=1** pushes log directly to the **OES** service. Delivery is performed in parallel thread what prevents application from handing when network or **OES** lags.
+5. **shorten=1000** limits amount of elements in passed to **json_data** or **repr** in order to pervent unintentional cpu consumption when logging huge objects. Default is 100. To disable set to 0.
 
     
-    
-**Notice**
-        
-please put structured data into **json_data** or **repr** arguments instead of putting it into plain text.
-This will allow you to search it in **OES** with ease. For example:
 
-```python
-log.info('Important event', json_data={'attr1': 'value1', 'attr2': 'value2'})
-```
-
-Later it can be searched like
-
-```Text
-important event AND json_data.attr1: value1
-```
 
 ## Tools:
 
@@ -86,12 +72,7 @@ ext_logging.configure_logs({
         #configuring root - '' logger
         '': [
             {
-                'handler': 'ext_logging.handlers.ELKFileHandler',
-                'json_serializer': YourCustomSerializerIfRequired,
-                'level': 'INFO'
-            },
-            {
-                'handler': 'ext_logging.handlers.OESConcurrentFileExtendedSysLogHandler',
+                'handler': 'ext_logging.handlers.ConcurrentFileExtendedSysLogHandler',
                 'filename': 'test.log',
                 'json_serializer': YourCustomSerializerIfRequired,
                 'level': 'INFO'
@@ -106,6 +87,6 @@ use:
 ```python
 from logging import getLogger
 log = getLogger(__name__)
-log.error('here testing', oes=1)
+log.error('here testing')
 ```
 
